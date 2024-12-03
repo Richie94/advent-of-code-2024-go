@@ -7,8 +7,8 @@ import (
 	"strconv"
 )
 
-func main() {
-	lines, err := util.ReadFileAsArray("day03/data/input.txt")
+func Part1(fileName string) int {
+	lines, err := util.ReadFileAsArray(fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -29,12 +29,21 @@ func main() {
 			}
 		}
 	}
-	pattern = `(mul\((\d+),(\d+)\))|(do\(\))|(don't\(\))`
-	re, err = regexp.Compile(pattern)
+	return sum
+}
+
+func Part2(fileName string) int {
+	lines, err := util.ReadFileAsArray(fileName)
 	if err != nil {
 		panic(err)
 	}
-	sum2 := 0
+
+	pattern := `(mul\((\d+),(\d+)\))|(do\(\))|(don't\(\))`
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		panic(err)
+	}
+	sum := 0
 	active := true
 	for _, line := range lines {
 		matches := re.FindAllStringSubmatch(line, -1)
@@ -48,10 +57,17 @@ func main() {
 			if len(match) >= 4 && active {
 				num1, _ := strconv.Atoi(match[2])
 				num2, _ := strconv.Atoi(match[3])
-				sum2 += num1 * num2
+				sum += num1 * num2
 			}
 		}
 	}
+	return sum
+}
+
+func main() {
+	filename := "day03/data/input.txt"
+	sum := Part1(filename)
+	sum2 := Part2(filename)
 
 	fmt.Println("Part 1:", sum)
 	fmt.Println("Part 2:", sum2)
