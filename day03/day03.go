@@ -13,7 +13,7 @@ func main() {
 		panic(err)
 	}
 
-	pattern := `(mul\((\d+),(\d+)\))|(do\(\))|(don't\(\))`
+	pattern := `mul\((\d+),(\d+)\)`
 	re, err := regexp.Compile(pattern)
 	if err != nil {
 		panic(err)
@@ -29,12 +29,16 @@ func main() {
 			}
 		}
 	}
+	pattern = `(mul\((\d+),(\d+)\))|(do\(\))|(don't\(\))`
+	re, err = regexp.Compile(pattern)
+	if err != nil {
+		panic(err)
+	}
 	sum2 := 0
 	active := true
 	for _, line := range lines {
 		matches := re.FindAllStringSubmatch(line, -1)
 		for _, match := range matches {
-			fmt.Println(match)
 			if match[0] == "do()" {
 				active = true
 			}
