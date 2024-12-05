@@ -12,24 +12,7 @@ func Part1(fileName string) int {
 	rules, updatesText := splitInputs(fileName)
 	sum := 0
 	for _, line := range updatesText {
-		numStrings := strings.Split(line, ",")
-		intLine := make([]int, 0)
-		valid := true
-		for _, num := range numStrings {
-			n, _ := strconv.Atoi(num)
-			// check if n occurs in rules on the left side
-			for _, rule := range rules {
-				if n == rule[0] {
-					// there should not be the right number in the intlLine
-					for _, num2 := range intLine {
-						if num2 == rule[1] {
-							valid = false
-						}
-					}
-				}
-			}
-			intLine = append(intLine, n)
-		}
+		intLine, valid := buildUpdateAndCheckValidity(line, rules)
 
 		if valid {
 			// add the middle element of the line to the sum
@@ -43,24 +26,7 @@ func Part2(fileName string) int {
 	rules, updatesText := splitInputs(fileName)
 	sum := 0
 	for _, line := range updatesText {
-		numStrings := strings.Split(line, ",")
-		intLine := make([]int, 0)
-		valid := true
-		for _, num := range numStrings {
-			n, _ := strconv.Atoi(num)
-			// check if n occurs in rules on the left side
-			for _, rule := range rules {
-				if n == rule[0] {
-					// there should not be the right number in the intlLine
-					for _, num2 := range intLine {
-						if num2 == rule[1] {
-							valid = false
-						}
-					}
-				}
-			}
-			intLine = append(intLine, n)
-		}
+		intLine, valid := buildUpdateAndCheckValidity(line, rules)
 
 		if !valid {
 			// fix the line
@@ -81,6 +47,32 @@ func Part2(fileName string) int {
 	return sum
 }
 
+// buildUpdateAndCheckValidity converts a comma-separated string of numbers into a slice of integers and checks its validity.
+// It verifies each number against rules and sets the validity to false if a rule's condition is violated. Returns the slice and validity.
+func buildUpdateAndCheckValidity(line string, rules [][]int) ([]int, bool) {
+	numStrings := strings.Split(line, ",")
+	intLine := make([]int, 0)
+	valid := true
+	for _, num := range numStrings {
+		n, _ := strconv.Atoi(num)
+		// check if n occurs in rules on the left side
+		for _, rule := range rules {
+			if n == rule[0] {
+				// there should not be the right number in the intlLine
+				for _, num2 := range intLine {
+					if num2 == rule[1] {
+						valid = false
+					}
+				}
+			}
+		}
+		intLine = append(intLine, n)
+	}
+	return intLine, valid
+}
+
+// splitInputs reads a file and splits its content into rules and updates text sections.
+// It returns a slice of integer pairs extracted from rules and a slice of strings for updates.
 func splitInputs(fileName string) ([][]int, []string) {
 	text, _ := util.ReadFileAsString(fileName)
 	// list of pairs of ints
