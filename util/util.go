@@ -27,3 +27,26 @@ func ReadFileAsArray(filename string) ([]string, error) {
 
 	return lines, nil
 }
+
+func ReadFileAsString(filename string) (string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", fmt.Errorf("error opening file: %w", err)
+	}
+	defer file.Close()
+
+	var text string
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		text += scanner.Text() + "\n"
+	}
+	// remove last newline
+	text = text[:len(text)-1]
+
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("error reading file: %w", err)
+	}
+
+	return text, nil
+}
