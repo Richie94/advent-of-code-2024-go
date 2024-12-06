@@ -21,7 +21,7 @@ var directions = []Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
 func Part1(fileName string) int {
 	obstructions, guardInit, xBound, yBound := parseFile(fileName)
 	guardTraces, _ := simulateGuardRunning(obstructions, guardInit, xBound, yBound)
-	return len(util.Unique(guardTraces)) - 1
+	return len(util.Unique(guardTraces))
 }
 
 func parseFile(fileName string) ([]Point, Point, int, int) {
@@ -65,6 +65,8 @@ func simulateGuardRunning(obstructions []Point, guardInit Point, xBound, yBound 
 			guardPositions = append(guardPositions, nextPosition)
 		}
 	}
+	// drop last as it out of bounds
+	guardPositions = guardPositions[:len(guardPositions)-1]
 	return guardPositions, nil
 }
 
