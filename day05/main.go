@@ -79,14 +79,14 @@ func splitInputs(fileName string) ([][]int, []string) {
 	rules := make([][]int, 0)
 	split := strings.Split(text, "\n\n")
 	rulesText := strings.Split(split[0], "\n")
-	updatesText := strings.Split(split[1], "\n")
+	updatesTexts := strings.Split(split[1], "\n")
 	for _, line := range rulesText {
 		numStrings := strings.Split(line, "|")
 		a, _ := strconv.Atoi(numStrings[0])
 		b, _ := strconv.Atoi(numStrings[1])
 		rules = append(rules, []int{a, b})
 	}
-	return rules, updatesText
+	return rules, updatesTexts
 }
 
 func main() {
