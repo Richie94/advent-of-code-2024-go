@@ -24,27 +24,6 @@ func Part1(fileName string) int {
 	return len(util.Unique(guardTraces)) - 2
 }
 
-func simulateGuardRunning(obstructions []Point, guardInit Point, xBound, yBound int) ([]Point, error) {
-	direction := 0
-	guardPositions := make([]Point, 1)
-	guardPositions = append(guardPositions, guardInit)
-	for guardPositions[len(guardPositions)-1].inBounds(xBound, yBound) {
-		lastPosition := guardPositions[len(guardPositions)-1]
-		nextPosition := Point{lastPosition.X + directions[direction].X, lastPosition.Y + directions[direction].Y}
-
-		if slices.Contains(obstructions, nextPosition) {
-			direction = (direction + 1) % len(directions)
-		} else {
-			foundAt := slices.Index(guardPositions, nextPosition)
-			if foundAt > 0 && guardPositions[foundAt-1] == lastPosition {
-				return guardPositions, fmt.Errorf("guard is running in circles")
-			}
-			guardPositions = append(guardPositions, nextPosition)
-		}
-	}
-	return guardPositions, nil
-}
-
 func parseFile(fileName string) ([]Point, Point, int, int) {
 	lines, _ := util.ReadFileAsArray(fileName)
 	var obstructions, guardPositions []Point
@@ -68,9 +47,25 @@ func parseObstructionsAndGuardsPositions(lines []string) ([]Point, []Point) {
 	return obstructions, guardPositions
 }
 
-// sliceToString konvertiert ein Point in eine string Darstellung, die als Schlüssel in einer Map verwendet werden kann.
-func sliceToString(p Point) string {
-	return fmt.Sprintf("%d,%d", p.X, p.Y)
+func simulateGuardRunning(obstructions []Point, guardInit Point, xBound, yBound int) ([]Point, error) {
+	direction := 0
+	guardPositions := make([]Point, 1)
+	guardPositions = append(guardPositions, guardInit)
+	for guardPositions[len(guardPositions)-1].inBounds(xBound, yBound) {
+		lastPosition := guardPositions[len(guardPositions)-1]
+		nextPosition := Point{lastPosition.X + directions[direction].X, lastPosition.Y + directions[direction].Y}
+
+		if slices.Contains(obstructions, nextPosition) {
+			direction = (direction + 1) % len(directions)
+		} else {
+			foundAt := slices.Index(guardPositions, nextPosition)
+			if foundAt > 0 && guardPositions[foundAt-1] == lastPosition {
+				return guardPositions, fmt.Errorf("guard is running in circles")
+			}
+			guardPositions = append(guardPositions, nextPosition)
+		}
+	}
+	return guardPositions, nil
 }
 
 func Part2(fileName string) int {
