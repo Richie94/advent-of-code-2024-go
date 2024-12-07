@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func Part1(fileName string) int {
@@ -12,22 +13,41 @@ func Part1(fileName string) int {
 }
 
 func solve(fileName string, allowConcat bool) int {
-	sum := 0
 	lines, _ := util.ReadFileAsArray(fileName)
-	for _, line := range lines {
-		// format num1: num2 num3 ...
-		split1 := strings.Split(line, ":")
-		leftValue, _ := strconv.Atoi(split1[0])
-		split2 := strings.Split(split1[1], " ")
-		rightValues := make([]int, len(split2))
-		for i, v := range split2 {
-			rightValues[i], _ = strconv.Atoi(v)
-		}
-		if recursiveTestEquation(leftValue, 0, rightValues, allowConcat) {
-			sum += leftValue
-		}
+	results := make([]int, len(lines))
+	wg := &sync.WaitGroup{}
+
+	for i, line := range lines {
+		wg.Add(1)
+		go func(i int, line string) {
+			defer wg.Done()
+			results[i] = solveLine(line, allowConcat)
+		}(i, line)
 	}
+
+	wg.Wait()
+
+	sum := 0
+	for _, result := range results {
+		sum += result
+	}
+
 	return sum
+}
+
+func solveLine(line string, allowConcat bool) int {
+	// format num1: num2 num3 ...
+	split1 := strings.Split(line, ":")
+	leftValue, _ := strconv.Atoi(split1[0])
+	split2 := strings.Split(split1[1], " ")
+	rightValues := make([]int, len(split2))
+	for i, v := range split2 {
+		rightValues[i], _ = strconv.Atoi(v)
+	}
+	if recursiveTestEquation(leftValue, 0, rightValues, allowConcat) {
+		return leftValue
+	}
+	return 0
 }
 
 func recursiveTestEquation(leftValue int, intermediateResult int, rightValues []int, allowConcat bool) bool {
