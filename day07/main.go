@@ -31,9 +31,13 @@ func solve(fileName string, allowConcat bool) int {
 }
 
 func recursiveTestEquation(leftValue int, intermediateResult int, rightValues []int, allowConcat bool) bool {
-	// if we have no valuzes left in rightValues, check if intermediateResult is equal to leftValue
+	// if we have no values left in rightValues, check if intermediateResult is equal to leftValue
 	if len(rightValues) == 0 {
 		return intermediateResult == leftValue
+	}
+	// we can only grow, so if we are already bigger than leftValue, return false
+	if intermediateResult > leftValue {
+		return false
 	}
 	// if we have values left in rightValues, make the sum of intermediate with the first value in rightValues
 	// and call the function recursively with the new intermediate value and the rest of the rightValues

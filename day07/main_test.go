@@ -33,7 +33,7 @@ func TestPart2(t *testing.T) {
 		want int
 	}{
 		{"test", args{"data/test.txt"}, 11387},
-		{"solve", args{"data/input.txt"}, 0},
+		{"solve", args{"data/input.txt"}, 248427118972289},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
