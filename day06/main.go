@@ -74,6 +74,8 @@ func Part2(fileName string) int {
 	obstructions, guardInit, xBound, yBound := parseFile(fileName)
 	sum := 0
 	guardPositions, _ := simulateGuardRunning(obstructions, guardInit, xBound, yBound)
+	// drop first as we cant place something there
+	guardPositions = guardPositions[1:]
 	guardPositions = util.Unique(guardPositions)
 
 	for _, pos := range guardPositions {
