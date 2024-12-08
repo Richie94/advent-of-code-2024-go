@@ -6,17 +6,8 @@ import (
 	"slices"
 )
 
-type Point struct {
-	X, Y int
-}
-
-// inBounds checks if a point is within the bounds of a grid.
-func (p Point) inBounds(xBound, yBound int) bool {
-	return p.X >= 0 && p.X < xBound && p.Y >= 0 && p.Y < yBound
-}
-
 // directions up, right, down, left als Array von Point
-var directions = []Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
+var directions = []util.Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
 
 func Part1(fileName string) int {
 	obstructions, guardInit, xBound, yBound := parseFile(fileName)
@@ -24,36 +15,36 @@ func Part1(fileName string) int {
 	return len(util.Unique(guardTraces))
 }
 
-func parseFile(fileName string) ([]Point, Point, int, int) {
+func parseFile(fileName string) ([]util.Point, util.Point, int, int) {
 	lines, _ := util.ReadFileAsArray(fileName)
-	var obstructions, guardPositions []Point
+	var obstructions, guardPositions []util.Point
 	xBound := len(lines[0])
 	yBound := len(lines)
 	obstructions, guardPositions = parseObstructionsAndGuardsPositions(lines)
 	return obstructions, guardPositions[0], xBound, yBound
 }
 
-func parseObstructionsAndGuardsPositions(lines []string) ([]Point, []Point) {
-	var obstructions, guardPositions []Point
+func parseObstructionsAndGuardsPositions(lines []string) ([]util.Point, []util.Point) {
+	var obstructions, guardPositions []util.Point
 	for i, line := range lines {
 		for j, char := range line {
 			if char == '#' {
-				obstructions = append(obstructions, Point{i, j})
+				obstructions = append(obstructions, util.Point{X: i, Y: j})
 			} else if char == '^' {
-				guardPositions = append(guardPositions, Point{i, j})
+				guardPositions = append(guardPositions, util.Point{X: i, Y: j})
 			}
 		}
 	}
 	return obstructions, guardPositions
 }
 
-func simulateGuardRunning(obstructions []Point, guardInit Point, xBound, yBound int) ([]Point, error) {
+func simulateGuardRunning(obstructions []util.Point, guardInit util.Point, xBound, yBound int) ([]util.Point, error) {
 	direction := 0
-	guardPositions := make([]Point, 0)
+	guardPositions := make([]util.Point, 0)
 	guardPositions = append(guardPositions, guardInit)
-	for guardPositions[len(guardPositions)-1].inBounds(xBound, yBound) {
+	for guardPositions[len(guardPositions)-1].InBounds(xBound, yBound) {
 		lastPosition := guardPositions[len(guardPositions)-1]
-		nextPosition := Point{lastPosition.X + directions[direction].X, lastPosition.Y + directions[direction].Y}
+		nextPosition := util.Point{X: lastPosition.X + directions[direction].X, Y: lastPosition.Y + directions[direction].Y}
 
 		if slices.Contains(obstructions, nextPosition) {
 			direction = (direction + 1) % len(directions)

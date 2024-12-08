@@ -62,3 +62,12 @@ func Unique[T comparable](sliceList []T) []T {
 	}
 	return list
 }
+
+type Point struct {
+	X, Y int
+}
+
+// inBounds checks if a point is within the bounds of a grid.
+func (p Point) InBounds(xBound, yBound int) bool {
+	return p.X >= 0 && p.X < xBound && p.Y >= 0 && p.Y < yBound
+}
