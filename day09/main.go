@@ -59,7 +59,7 @@ func compactDatapoints(dataPoints []DataPoint) {
 			// we read the complete block, now we try to merge it
 			amountFree := 0
 			matched := false
-			for j := 0; j < i; j++ {
+			for j := 0; j <= i; j++ {
 				if amountFree == amountFilled {
 					// we found a complete block
 					// swap the two blocks
@@ -133,8 +133,8 @@ func generateDatapoints(text string) []DataPoint {
 func Part2(fileName string) int {
 	text, _ := util.ReadFileAsString(fileName)
 	dataPoints := generateDatapoints(text)
-	fmt.Println(dataPoints)
 	compactDatapoints(dataPoints)
+	// write to file, join the dataPoints
 	fmt.Println(dataPoints)
 	sum := calcSum(dataPoints)
 	return sum
