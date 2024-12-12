@@ -50,7 +50,7 @@ func (area *Area) perimeter() int {
 }
 
 func (area *Area) sides() int {
-	// get all adjacent points
+	// get all adjacent points, use their direction as the point "color"
 	edgeAreas := make([]*Area, 0)
 	for _, p := range area.points {
 		for _, direction := range directions {
@@ -58,12 +58,10 @@ func (area *Area) sides() int {
 			if !slices.Contains(area.points, neighbour) {
 				color := directionsMap[direction]
 				// check if we can merge it with an edge area
-				// check if the point is adjacent to any area
 				edgeAreas = getAreas(edgeAreas, color, neighbour)
 			}
 		}
 	}
-	// adjacent point on a line count as one side
 	return len(edgeAreas)
 }
 
