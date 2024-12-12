@@ -67,7 +67,23 @@ type Point struct {
 	X, Y int
 }
 
-// inBounds checks if a point is within the bounds of a grid.
+// InBounds checks if a point is within the bounds of a grid.
 func (p Point) InBounds(xBound, yBound int) bool {
 	return p.X >= 0 && p.X < xBound && p.Y >= 0 && p.Y < yBound
+}
+
+var Directions = []Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
+
+var DirectionsToStringMap = map[Point]string{
+	{-1, 0}: "up",
+	{0, 1}:  "right",
+	{1, 0}:  "down",
+	{0, -1}: "left",
+}
+
+var StringToDirectionsMap = map[string]Point{
+	"up":    {-1, 0},
+	"right": {0, 1},
+	"down":  {1, 0},
+	"left":  {0, -1},
 }

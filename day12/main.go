@@ -6,14 +6,6 @@ import (
 	"slices"
 )
 
-var directions = []util.Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
-var directionsMap = map[util.Point]string{
-	{-1, 0}: "up",
-	{0, 1}:  "right",
-	{1, 0}:  "down",
-	{0, -1}: "left",
-}
-
 type Area struct {
 	points []util.Point
 	color  string
@@ -22,7 +14,7 @@ type Area struct {
 // adjacent should check if the point is adjacent to any point in the area
 func (area *Area) adjacent(point util.Point) bool {
 	for _, p := range area.points {
-		for _, direction := range directions {
+		for _, direction := range util.Directions {
 			if p.X+direction.X == point.X && p.Y+direction.Y == point.Y {
 				return true
 			}
@@ -39,7 +31,7 @@ func (area *Area) perimeter() int {
 	// we have to iterate over all points and check if it has a neighbour inside our points
 	perimeter := 0
 	for _, p := range area.points {
-		for _, direction := range directions {
+		for _, direction := range util.Directions {
 			neighbour := util.Point{X: p.X + direction.X, Y: p.Y + direction.Y}
 			if !slices.Contains(area.points, neighbour) {
 				perimeter++
@@ -53,10 +45,10 @@ func (area *Area) sides() int {
 	// get all adjacent points, use their direction as the point "color"
 	edgeAreas := make([]*Area, 0)
 	for _, p := range area.points {
-		for _, direction := range directions {
+		for _, direction := range util.Directions {
 			neighbour := util.Point{X: p.X + direction.X, Y: p.Y + direction.Y}
 			if !slices.Contains(area.points, neighbour) {
-				color := directionsMap[direction]
+				color := util.DirectionsToStringMap[direction]
 				// check if we can merge it with an edge area
 				edgeAreas = getAreas(edgeAreas, color, neighbour)
 			}
@@ -105,10 +97,8 @@ func getAreas(areas []*Area, color string, point util.Point) []*Area {
 		mergedArea := &Area{points: []util.Point{point}, color: color}
 		for _, area := range adjacentAreas {
 			mergedArea.points = append(mergedArea.points, area.points...)
-			areas = slices.DeleteFunc(areas, func(a *Area) bool {
-				return a.color == area.color && slices.EqualFunc(a.points, area.points, func(p1, p2 util.Point) bool {
-					return p1.X == p2.X && p1.Y == p2.Y
-				})
+			areas = slices.DeleteFunc(areas, func(other *Area) bool {
+				return other == area
 			})
 		}
 		areas = append(areas, mergedArea)
