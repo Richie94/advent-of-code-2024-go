@@ -91,3 +91,42 @@ var StringToDirectionsMap = map[string]Point{
 	"down":  {1, 0},
 	"left":  {0, -1},
 }
+
+func TurnRight(direction Point) Point {
+	switch direction {
+	case Directions[0]:
+		return Directions[1]
+	case Directions[1]:
+		return Directions[2]
+	case Directions[2]:
+		return Directions[3]
+	case Directions[3]:
+		return Directions[0]
+	}
+	return Point{}
+}
+
+func TurnLeft(direction Point) Point {
+	switch direction {
+	case Directions[0]:
+		return Directions[3]
+	case Directions[1]:
+		return Directions[0]
+	case Directions[2]:
+		return Directions[1]
+	case Directions[3]:
+		return Directions[2]
+	}
+	return Point{}
+}
+
+func AbsInt(x int) int {
+	return absDiffInt(x, 0)
+}
+
+func absDiffInt(x, y int) int {
+	if x < y {
+		return y - x
+	}
+	return x - y
+}
