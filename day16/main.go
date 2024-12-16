@@ -16,15 +16,25 @@ func Part1(fileName string) int {
 	lines, _ := util.ReadFileAsArray(fileName)
 	maze := parseMaze(lines)
 	// fine the way from start to end with A*
+	startMove := Move{point: maze.start, direction: util.Point{X: 0, Y: 1}}
+	gscores := getGscores(startMove, maze)
+	score := 10000000
+	for m, value := range gscores {
+		if m.point == maze.end && value < score {
+			score = value
+		}
+	}
+	return score
+}
+
+func getGscores(startMove Move, maze *Maze) map[Move]int {
 	openList := make([]Move, 0)
 	closedList := make([]Move, 0)
-	startMove := Move{point: maze.start, direction: util.Point{X: 0, Y: 1}}
 	openList = append(openList, startMove)
-	parents := make(map[util.Point]util.Point)
 	gScores := make(map[Move]int)
 	gScores[startMove] = 0
 	fScores := make(map[Move]int)
-	fScores[startMove] = heustic(maze.start, maze.end)
+	fScores[startMove] = heuristic(startMove, maze.end)
 	for len(openList) > 0 {
 		current := openList[0]
 		for _, tile := range openList {
@@ -32,20 +42,8 @@ func Part1(fileName string) int {
 				current = tile
 			}
 		}
-		//debug(maze, current)
 		if current.point == maze.end {
-			// reconstruct path
-			path := make([]util.Point, 0)
-			path = append(path, current.point)
-			currentPoint := current.point
-			for {
-				currentPoint = parents[currentPoint]
-				path = append(path, currentPoint)
-				if currentPoint == maze.start {
-					break
-				}
-			}
-			return gScores[current]
+			return gScores
 		}
 		openList = slices.DeleteFunc(openList, func(p Move) bool {
 			return p == current
@@ -56,8 +54,6 @@ func Part1(fileName string) int {
 			if slices.Contains(closedList, move) {
 				continue
 			}
-			// check how many 90 degree turns we had to make
-
 			tentativeGScore := gScores[current] + moveWithCost.cost
 
 			if !slices.Contains(openList, move) {
@@ -65,51 +61,12 @@ func Part1(fileName string) int {
 			} else if tentativeGScore >= gScores[move] {
 				continue
 			}
-			if moveWithCost.point != current.point {
-				parents[moveWithCost.point] = current.point
-			}
 			gScores[move] = tentativeGScore
-			fScores[move] = gScores[move] + heustic(moveWithCost.point, maze.end)
+			fScores[move] = gScores[move] + heuristic(move, maze.end)
 		}
 	}
 
-	return 0
-}
-
-func debug(maze *Maze, point Move) {
-	xMax := 0
-	yMax := 0
-	for _, tile := range maze.freeTiles {
-		if tile.X+1 > xMax {
-			xMax = tile.X + 1
-		}
-		if tile.Y+1 > yMax {
-			yMax = tile.Y + 1
-		}
-	}
-	for i := 0; i < xMax; i++ {
-		for j := 0; j < yMax; j++ {
-			if point.point.X == i && point.point.Y == j {
-				dirString := util.DirectionsToStringMap[point.direction]
-				switch dirString {
-				case "up":
-					fmt.Print("^")
-				case "down":
-					fmt.Print("v")
-				case "left":
-					fmt.Print("<")
-				case "right":
-					fmt.Print(">")
-				}
-			} else if slices.Contains(maze.freeTiles, util.Point{X: i, Y: j}) {
-				fmt.Print(".")
-			} else {
-				fmt.Print("#")
-
-			}
-		}
-		fmt.Println()
-	}
+	return gScores
 }
 
 type Move struct {
@@ -130,18 +87,21 @@ func getNeighbours(move Move, maze *Maze) []MoveWithCost {
 		neighbours = append(neighbours, MoveWithCost{point: neighbour, direction: move.direction, cost: 1})
 	}
 	// also add the moves for turning right or left
-	neighbours = append(neighbours, MoveWithCost{point: move.point, direction: util.TurnLeft(move.direction), cost: 1000})
-	neighbours = append(neighbours, MoveWithCost{point: move.point, direction: util.TurnRight(move.direction), cost: 1000})
+	left := util.TurnLeft(move.direction)
+	if slices.Contains(maze.freeTiles, util.Point{X: move.point.X + left.X, Y: move.point.Y + left.Y}) {
+		neighbours = append(neighbours, MoveWithCost{point: move.point, direction: left, cost: 1000})
+	}
+	right := util.TurnRight(move.direction)
+	if slices.Contains(maze.freeTiles, util.Point{X: move.point.X + right.X, Y: move.point.Y + right.Y}) {
+		neighbours = append(neighbours, MoveWithCost{point: move.point, direction: right, cost: 1000})
+	}
 	return neighbours
 }
 
-func heustic(a, b util.Point) int {
-	walkPart := util.AbsInt(a.X-b.X) + util.AbsInt(a.Y-b.Y)
+func heuristic(a Move, b util.Point) int {
+	walkPart := util.AbsInt(a.point.X-b.X) + util.AbsInt(a.point.Y-b.Y)
 	turnPart := 0
-	if util.AbsInt(a.X-b.X) > 0 {
-		turnPart++
-	}
-	if util.AbsInt(a.Y-b.Y) > 0 {
+	if util.AbsInt(a.point.X-b.X) > 0 && util.AbsInt(a.point.Y-b.Y) > 0 {
 		turnPart++
 	}
 	return walkPart + 1000*turnPart
@@ -167,7 +127,52 @@ func parseMaze(lines []string) *Maze {
 }
 
 func Part2(fileName string) int {
-	return 0
+	lines, _ := util.ReadFileAsArray(fileName)
+	maze := parseMaze(lines)
+	startMove := Move{point: maze.start, direction: util.Point{X: 0, Y: 1}}
+	gscoresA := getGscores(startMove, maze)
+
+	shortestPathScore := 10000000
+	shortestDir := util.Point{X: 0, Y: 1}
+	for m, value := range gscoresA {
+		if m.point == maze.end && value < shortestPathScore {
+			shortestPathScore = value
+			shortestDir = m.direction
+		}
+	}
+
+	mazeReverse := &Maze{freeTiles: maze.freeTiles, start: maze.end, end: maze.start}
+	startMoveReverse := Move{point: maze.end, direction: util.TurnLeft(util.TurnLeft(shortestDir))}
+	gscoresB := getGscores(startMoveReverse, mazeReverse)
+
+	pointsOnPath := make([]util.Point, 0)
+	for m, value := range gscoresA {
+		for m2, value2 := range gscoresB {
+			if m.point == m2.point {
+				s := value + value2
+				if shortestPathScore == s && !slices.Contains(pointsOnPath, m.point) {
+					pointsOnPath = append(pointsOnPath, m.point)
+				}
+			}
+		}
+	}
+	// debug
+	xMax := len(lines)
+	yMax := len(lines[0])
+	for x := 0; x < xMax; x++ {
+		for y := 0; y < yMax; y++ {
+			if slices.Contains(pointsOnPath, util.Point{X: x, Y: y}) {
+				fmt.Print("X")
+			} else if slices.Contains(maze.freeTiles, util.Point{X: x, Y: y}) {
+				fmt.Print(".")
+			} else {
+				fmt.Print("#")
+			}
+		}
+		fmt.Println()
+	}
+
+	return len(pointsOnPath)
 }
 
 func main() {

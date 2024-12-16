@@ -32,8 +32,8 @@ func TestPart2(t *testing.T) {
 		args args
 		want int
 	}{
-		{"test", args{"data/test.txt"}, 0},
-		{"solve", args{"data/input.txt"}, 0},
+		{"test", args{"data/test.txt"}, 45},
+		{"solve", args{"data/input.txt"}, 520},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
