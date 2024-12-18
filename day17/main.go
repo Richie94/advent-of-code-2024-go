@@ -33,8 +33,18 @@ func (p *Programm) combo(i int) int {
 
 func Part1(fileName string) string {
 	programm := parseProgramm(fileName)
+	output := runProgramm(programm)
+	outputString := make([]string, len(output))
+	for i, v := range output {
+		outputString[i] = strconv.Itoa(v)
+	}
+
+	return strings.Join(outputString, ",")
+}
+
+func runProgramm(programm *Programm) []int {
 	step := 0
-	output := make([]string, 0)
+	output := make([]int, 0)
 	for {
 		if step >= len(programm.instructions) {
 			break
@@ -68,7 +78,7 @@ func Part1(fileName string) string {
 			step += 2
 		case 5:
 			// out -> combo operand mod 8 will be outputted
-			output = append(output, strconv.Itoa(programm.combo(programm.instructions[step+1])%8))
+			output = append(output, programm.combo(programm.instructions[step+1])%8)
 			step += 2
 		case 6:
 			// bdv like adv but stored in B
@@ -85,7 +95,7 @@ func Part1(fileName string) string {
 		}
 	}
 
-	return strings.Join(output, ",")
+	return output
 }
 
 func parseProgramm(fileName string) *Programm {
@@ -108,7 +118,57 @@ func parseProgramm(fileName string) *Programm {
 }
 
 func Part2(fileName string) int {
-	return 0
+	programm := parseProgramm(fileName)
+	return findQuine(programm)
+}
+
+type state struct {
+	segs []int
+}
+
+func findQuine(prog *Programm) int {
+	queue := []state{}
+	for i := 0; i < 8; i++ {
+		queue = append(queue, state{[]int{i}})
+	}
+	var final int
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+
+		var x int
+		for i := len(cur.segs) - 1; i >= 0; i-- {
+			s := cur.segs[i] << (3 * i)
+			x = x | s
+		}
+		prog.regA = x
+		vals := runProgramm(prog)
+		fmt.Println(x, vals)
+		vp := 0
+		matched := true
+		for p := len(prog.instructions) - len(vals); p < len(prog.instructions); p++ {
+			if vals[vp] != prog.instructions[p] {
+				matched = false
+			}
+			vp++
+		}
+
+		done := matched && len(prog.instructions) == len(vals)
+		if done {
+			final = x
+			break
+		}
+
+		if matched {
+			for i := 0; i < 8; i++ {
+				nseg := make([]int, len(cur.segs))
+				copy(nseg, cur.segs)
+				nseg = append([]int{i}, nseg...)
+				queue = append(queue, state{nseg})
+			}
+		}
+	}
+	return final
 }
 
 func main() {
