@@ -22,9 +22,8 @@ func solve(fileName string, part1 bool) int {
 	})
 	sum := 0
 	for _, line := range strings.Split(split[1], "\n") {
-		rejectedCache := make(map[string]bool)
-		acceptedCache := make(map[string]int)
-		resolutions := solveLine(line, elements, rejectedCache, acceptedCache)
+		cache := make(map[string]int)
+		resolutions := solveLine(line, elements, cache)
 		if part1 {
 			if resolutions > 0 {
 				sum++
@@ -37,13 +36,12 @@ func solve(fileName string, part1 bool) int {
 	return sum
 }
 
-func solveLine(line string, elements []string, rejectedCache map[string]bool, acceptedCache map[string]int) int {
-	if rejectedCache[line] {
-		return 0
+func solveLine(line string, elements []string, cache map[string]int) int {
+	// return cache hits
+	if entry, exists := cache[line]; exists {
+		return entry
 	}
-	if acceptedCache[line] > 0 {
-		return acceptedCache[line]
-	}
+
 	if line == "" {
 		return 1
 	}
@@ -52,18 +50,13 @@ func solveLine(line string, elements []string, rejectedCache map[string]bool, ac
 	for _, element := range elements {
 		// if line starts with, try this recursive
 		if strings.HasPrefix(line, element) {
-			solvedBy += solveLine(line[len(element):], elements, rejectedCache, acceptedCache)
+			solvedBy += solveLine(line[len(element):], elements, cache)
 		}
 	}
 
-	if solvedBy > 0 {
-		acceptedCache[line] = solvedBy
-		return solvedBy
-	}
+	cache[line] = solvedBy
 
-	rejectedCache[line] = true
-
-	return 0
+	return solvedBy
 }
 
 func Part2(fileName string) int {
