@@ -33,9 +33,9 @@ func solve(fileName string, cheatDistance, minSave int) int {
 			}
 		}
 	}
-	// idea: run A* algorithm, reconstruct the path
 	path := getShortestPath(start, end, blocks, xMax, yMax)
-	// check for every point in the path if there is a cheat possible, e.g. if there is a point after it with x+/-2 or y+/-2
+	// check for every point in the path if there is a cheat possible,
+	// e.g. if there is a point after it in manhatten distance of cheatDistance
 	sum := 0
 	for i := 0; i < len(path)-1; i++ {
 		current := path[i]
@@ -44,7 +44,7 @@ func solve(fileName string, cheatDistance, minSave int) int {
 			manDist := manhattan(current, next)
 
 			if manDist <= cheatDistance {
-				// check whats the difference between i and j
+				// check whats the difference between i and j (normal distance) vs what we take now with manhattan cheat
 				cheat := j - i - manDist
 				if minSave <= cheat {
 					sum++
@@ -64,7 +64,7 @@ func getShortestPath(startPoint, endPoint util.Point, walls []util.Point, xMax, 
 		if current == endPoint {
 			return path
 		}
-		// get next neighbour whis is not before me
+		// get next neighbour who is not before me
 		neighbours := getNeighbours(current, walls, xMax, yMax)
 		for _, neighbour := range neighbours {
 			if len(path) > 1 && path[len(path)-2] == neighbour {
