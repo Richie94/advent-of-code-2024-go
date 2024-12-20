@@ -91,10 +91,6 @@ func getNeighbours(point util.Point, walls []util.Point, xMax, yMax int) []util.
 	return neighbours
 }
 
-func heuristic(a util.Point, b util.Point) int {
-	return manhattan(a, b)
-}
-
 func manhattan(a, b util.Point) int {
 	return util.AbsInt(a.X-b.X) + util.AbsInt(a.Y-b.Y)
 }
