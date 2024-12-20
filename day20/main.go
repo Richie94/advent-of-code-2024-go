@@ -2,7 +2,6 @@ package main
 
 import (
 	"advent-of-code-2024/util"
-	"fmt"
 	"slices"
 	"strings"
 )
@@ -38,7 +37,6 @@ func solve(fileName string, cheatDistance, minSave int) int {
 	path := getShortestPath(start, end, blocks, xMax, yMax)
 	// check for every point in the path if there is a cheat possible, e.g. if there is a point after it with x+/-2 or y+/-2
 	sum := 0
-	cheatMap := make(map[int]int)
 	for i := 0; i < len(path)-1; i++ {
 		current := path[i]
 		for j := i + 1; j < len(path); j++ {
@@ -48,67 +46,34 @@ func solve(fileName string, cheatDistance, minSave int) int {
 			if manDist <= cheatDistance {
 				// check whats the difference between i and j
 				cheat := j - i - manDist
-				cheatMap[cheat] = cheatMap[cheat] + 1
 				if minSave <= cheat {
 					sum++
 				}
 			}
 		}
 	}
-	fmt.Println(cheatMap)
 	return sum
 }
 
 func getShortestPath(startPoint, endPoint util.Point, walls []util.Point, xMax, yMax int) []util.Point {
-	openList := make([]util.Point, 0)
-	closedList := make([]util.Point, 0)
-	openList = append(openList, startPoint)
-	gScores := make(map[util.Point]int)
-	gScores[startPoint] = 0
-	fScores := make(map[util.Point]int)
-	fScores[startPoint] = heuristic(startPoint, endPoint)
-	parents := make(map[util.Point]util.Point)
-	for len(openList) > 0 {
-		current := openList[0]
-		for _, tile := range openList {
-			if fScores[tile] < fScores[current] {
-				current = tile
-			}
-		}
+	// there is only one path
+	path := make([]util.Point, 0)
+	path = append(path, startPoint)
+	for {
+		current := path[len(path)-1]
 		if current == endPoint {
-			// reconstruct the path
-			path := make([]util.Point, 0)
-			for current != startPoint {
-				path = append(path, current)
-				current = parents[current]
-			}
-			path = append(path, startPoint)
-			// now reverse the list
-			slices.Reverse(path)
 			return path
 		}
-		openList = slices.DeleteFunc(openList, func(p util.Point) bool {
-			return p == current
-		})
-		closedList = append(closedList, current)
-		for _, neighbour := range getNeighbours(current, walls, xMax, yMax) {
-			if slices.Contains(closedList, neighbour) {
+		// get next neighbour whis is not before me
+		neighbours := getNeighbours(current, walls, xMax, yMax)
+		for _, neighbour := range neighbours {
+			if len(path) > 1 && path[len(path)-2] == neighbour {
 				continue
 			}
-			tentativeGScore := gScores[current] + 1
-
-			if !slices.Contains(openList, neighbour) {
-				openList = append(openList, neighbour)
-			} else if tentativeGScore >= gScores[neighbour] {
-				continue
-			}
-			parents[neighbour] = current
-			gScores[neighbour] = tentativeGScore
-			fScores[neighbour] = gScores[neighbour] + heuristic(neighbour, endPoint)
+			path = append(path, neighbour)
+			break
 		}
 	}
-
-	return []util.Point{}
 }
 
 func getNeighbours(point util.Point, walls []util.Point, xMax, yMax int) []util.Point {
