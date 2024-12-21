@@ -39,7 +39,7 @@ func solve(fileName string, cheatDistance, minSave int) int {
 	sum := 0
 	for i := 0; i < len(path)-1; i++ {
 		current := path[i]
-		for j := i + 1; j < len(path); j++ {
+		for j := i + minSave; j < len(path); j++ {
 			next := path[j]
 			manDist := manhattan(current, next)
 
