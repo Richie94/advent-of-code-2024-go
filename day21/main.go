@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+	"strings"
 )
 
 // Last PAD
@@ -121,12 +122,14 @@ func shortestSequence(code string, middleRobots int) string {
 	}
 	positions[middleRobots] = util.Point{X: 2, Y: 3}
 
+	cache := make(map[string][]string)
+
 	for i := middleRobots + 1; i > 0; i-- {
 		pad := biDirectionalPad
 		if i == middleRobots+1 {
 			pad = oneDirectionalPad
 		}
-		fmt.Println(code, i)
+		fmt.Println(code, i, len(sequences[i]))
 		// the code here is the sequence for the last robot
 		detectedSequences := make([]string, 0)
 		for _, robotCode := range sequences[i] {
@@ -134,11 +137,60 @@ func shortestSequence(code string, middleRobots int) string {
 			if robotCode == "" {
 				continue
 			}
-			for _, c := range robotCode {
+			for runeIdx, targetRune := range robotCode {
+				// check if we have the sequence in cache
+				if sequences, exists := cache[robotCode[:runeIdx]]; exists {
+					tmpSequences = sequences
+					break
+				}
 				// find the shortest path from the current robot position to the code
-				target, _ := findKeyByValue(pad, c)
+				target, _ := findKeyByValue(pad, targetRune)
 				from := positions[i-1]
 				robotSeqs := findShortestPathsFromPoints(from, target, pad)
+				// optimization: if we have multiple paths and some have same char in a row, get rid of the others
+				skipSequences := make([]string, 0)
+				if len(robotSeqs) > 1 {
+					minCharSwitches := len(robotSeqs[0])
+					charSwitchMap := make(map[string]int)
+					for _, seq := range robotSeqs {
+						charSwitches := 0
+						for i := 1; i < len(seq); i++ {
+							if seq[i] != seq[i-1] {
+								charSwitches++
+							}
+						}
+						charSwitchMap[seq] = charSwitches
+						if charSwitches < minCharSwitches {
+							minCharSwitches = charSwitches
+						}
+					}
+					for _, seq := range robotSeqs {
+						if charSwitchMap[seq] > minCharSwitches {
+							skipSequences = append(skipSequences, seq)
+						}
+					}
+					// prefer starting with up or right, as they are closer to the letter A
+					// check if any starts with right Or Up, if it does, remove all others
+					startsWithRightOrUp := false
+					startsWithRightOrUpMap := make(map[string]bool)
+					for _, seq := range robotSeqs {
+						if seq == "" {
+							continue
+						}
+						startsWithRightOrUpMap[seq] = seq[0] == '>' || seq[0] == '^'
+						if seq[0] == '>' || seq[0] == '^' {
+							startsWithRightOrUp = true
+						}
+					}
+
+					if startsWithRightOrUp {
+						for seq, startsWith := range startsWithRightOrUpMap {
+							if !startsWith {
+								skipSequences = append(skipSequences, seq)
+							}
+						}
+					}
+				}
 				positions[i-1] = target
 
 				if len(tmpSequences) == 0 {
@@ -148,10 +200,14 @@ func shortestSequence(code string, middleRobots int) string {
 				newSequences := make([]string, 0)
 				for _, seq := range tmpSequences {
 					for _, robotSeq := range robotSeqs {
+						if slices.Contains(skipSequences, robotSeq) {
+							continue
+						}
 						newSequences = append(newSequences, seq+robotSeq+"A")
 					}
 				}
 				tmpSequences = newSequences
+				cache[robotCode[:runeIdx]] = tmpSequences
 			}
 
 			detectedSequences = append(detectedSequences, tmpSequences...)
@@ -204,11 +260,210 @@ func Part2(fileName string) int {
 }
 
 func main() {
-	filename := "day03/data/input.txt"
-	sum := Part1(filename)
-	sum2 := Part2(filename)
+	input, _ := util.ReadFileAsArray("day21/data/test.txt")
+	numericalMap := make(map[string]util.Point)
+	numericalMap["A"] = util.Point{2, 0}
+	numericalMap["0"] = util.Point{1, 0}
+	numericalMap["1"] = util.Point{0, 1}
+	numericalMap["2"] = util.Point{1, 1}
+	numericalMap["3"] = util.Point{2, 1}
+	numericalMap["4"] = util.Point{0, 2}
+	numericalMap["5"] = util.Point{1, 2}
+	numericalMap["6"] = util.Point{2, 2}
+	numericalMap["7"] = util.Point{0, 3}
+	numericalMap["8"] = util.Point{1, 3}
+	numericalMap["9"] = util.Point{2, 3}
 
-	fmt.Println("Part 1:", sum)
-	fmt.Println("Part 2:", sum2)
+	directionalMap := make(map[string]util.Point)
+	directionalMap["A"] = util.Point{2, 1}
+	directionalMap["^"] = util.Point{1, 1}
+	directionalMap["<"] = util.Point{0, 0}
+	directionalMap["v"] = util.Point{1, 0}
+	directionalMap[">"] = util.Point{2, 0}
 
+	//fmt.Println("answer to part 1: ", getSequence(input, numericalMap, directionalMap, 2))
+	fmt.Println("answer to part 1: ", getSequence(input, numericalMap, directionalMap, 25))
+}
+
+/*
+// +---+---+---+
+// | 7 | 8 | 9 |
+// +---+---+---+
+// | 4 | 5 | 6 |
+// +---+---+---+
+// | 1 | 2 | 3 |
+// +---+---+---+
+//	   | 0 | A |
+//	   +---+---+
+*/
+func getPressesForNumericPad(input []string, start string, numericalMap map[string]util.Point) []string {
+	current := numericalMap[start]
+	output := []string{}
+
+	for _, char := range input {
+		dest := numericalMap[char]
+		diffX, diffY := dest.X-current.X, dest.Y-current.Y
+
+		horizontal, vertical := []string{}, []string{}
+
+		for i := 0; i < util.AbsInt(diffX); i++ {
+			if diffX >= 0 {
+				horizontal = append(horizontal, ">")
+			} else {
+				horizontal = append(horizontal, "<")
+			}
+		}
+
+		for i := 0; i < util.AbsInt(diffY); i++ {
+			if diffY >= 0 {
+				vertical = append(vertical, "^")
+			} else {
+				vertical = append(vertical, "v")
+			}
+		}
+
+		// prioritisation order:
+		// 1. moving with least turns
+		// 2. moving < over ^ over v over >
+
+		if current.Y == 0 && dest.X == 0 {
+			output = append(output, vertical...)
+			output = append(output, horizontal...)
+		} else if current.X == 0 && dest.Y == 0 {
+			output = append(output, horizontal...)
+			output = append(output, vertical...)
+		} else if diffX < 0 {
+			output = append(output, horizontal...)
+			output = append(output, vertical...)
+		} else if diffX >= 0 {
+			output = append(output, vertical...)
+			output = append(output, horizontal...)
+		}
+
+		current = dest
+		output = append(output, "A")
+	}
+	return output
+}
+
+/*
+//     +---+---+
+//     | ^ | A |
+// +---+---+---+
+// | < | v | > |
+// +---+---+---+
+*/
+func getPressesForDirectionalPad(input []string, start string, directionlMap map[string]util.Point) []string {
+	current := directionlMap[start]
+	output := []string{}
+
+	for _, char := range input {
+		dest := directionlMap[char]
+		diffX, diffY := dest.X-current.X, dest.Y-current.Y
+
+		horizontal, vertical := []string{}, []string{}
+
+		for i := 0; i < util.AbsInt(diffX); i++ {
+			if diffX >= 0 {
+				horizontal = append(horizontal, ">")
+			} else {
+				horizontal = append(horizontal, "<")
+			}
+		}
+
+		for i := 0; i < util.AbsInt(diffY); i++ {
+			if diffY >= 0 {
+				vertical = append(vertical, "^")
+			} else {
+				vertical = append(vertical, "v")
+			}
+		}
+
+		// prioritisation order:
+		// 1. moving with least turns
+		// 2. moving < over ^ over v over >
+
+		if current.X == 0 && dest.Y == 1 {
+			output = append(output, horizontal...)
+			output = append(output, vertical...)
+		} else if current.Y == 1 && dest.X == 0 {
+			output = append(output, vertical...)
+			output = append(output, horizontal...)
+		} else if diffX < 0 {
+			output = append(output, horizontal...)
+			output = append(output, vertical...)
+		} else if diffX >= 0 {
+			output = append(output, vertical...)
+			output = append(output, horizontal...)
+		}
+		current = dest
+		output = append(output, "A")
+	}
+	return output
+}
+
+func getSequence(input []string, numericalMap, directionalMap map[string]util.Point, robots int) int {
+	count := 0
+	cache := make(map[string][]int)
+	for _, line := range input {
+		row := strings.Split(line, "")
+		seq1 := getPressesForNumericPad(row, "A", numericalMap)
+		num := getCountAfterRobots(seq1, robots, 1, cache, directionalMap)
+		codeString := ""
+		for _, c := range line {
+			// if code is digit, append to codeString
+			if c >= '0' && c <= '9' {
+				codeString += string(c)
+			}
+		}
+		codeNum, _ := strconv.Atoi(codeString)
+		count += codeNum * num
+	}
+	return count
+}
+
+func getCountAfterRobots(input []string, maxRobots int, robot int, cache map[string][]int, directionalMap map[string]util.Point) int {
+	if val, ok := cache[strings.Join(input, "")]; ok {
+		if val[robot-1] != 0 {
+			return val[robot-1]
+		}
+	} else {
+		cache[strings.Join(input, "")] = make([]int, maxRobots)
+	}
+
+	seq := getPressesForDirectionalPad(input, "A", directionalMap)
+	cache[strings.Join(input, "")][0] = len(seq)
+
+	if robot == maxRobots {
+		return len(seq)
+	}
+
+	splitSeq := getIndividualSteps(seq)
+
+	count := 0
+	for _, s := range splitSeq {
+		c := getCountAfterRobots(s, maxRobots, robot+1, cache, directionalMap)
+		if _, ok := cache[strings.Join(s, "")]; !ok {
+			cache[strings.Join(s, "")] = make([]int, maxRobots)
+		}
+		cache[strings.Join(s, "")][0] = c
+		count += c
+	}
+
+	cache[strings.Join(input, "")][robot-1] = count
+	return count
+}
+
+func getIndividualSteps(input []string) [][]string {
+	output := [][]string{}
+	current := []string{}
+	for _, char := range input {
+		current = append(current, char)
+
+		if char == "A" {
+			output = append(output, current)
+			current = []string{}
+		}
+	}
+	return output
 }

@@ -11,8 +11,8 @@ func TestPart1(t *testing.T) {
 		args args
 		want int
 	}{
-		{"test", args{"data/test.txt"}, 126384},
-		{"solve", args{"data/input.txt"}, 211930},
+		{"test", args{"data/test.txt"}, 37327623},
+		{"solve", args{"data/input.txt"}, 20506453102},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -32,8 +32,8 @@ func TestPart2(t *testing.T) {
 		args args
 		want int
 	}{
-		{"test", args{"data/test.txt"}, 154115708116294},
-		{"solve", args{"data/input.txt"}, 263492840501566},
+		{"test", args{"data/test2.txt"}, 23},
+		{"solve", args{"data/input.txt"}, 2423},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
