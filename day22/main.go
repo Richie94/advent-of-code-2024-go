@@ -62,29 +62,22 @@ func getSequence(number, rounds int) map[string]int {
 
 func Part2(fileName string) int {
 	lines, _ := util.ReadFileAsArray(fileName)
-	changeMaps := make([]map[string]int, 0)
+	prices := make(map[string]int, 0)
 	for _, line := range lines {
 		num, _ := strconv.Atoi(line)
 		changeMap := getSequence(num, 2000)
-		changeMaps = append(changeMaps, changeMap)
-	}
-	// check the changeMaps for highest value over all changeMaps
-	allKeys := make(map[string]bool)
-	for _, changeMap := range changeMaps {
-		for key := range changeMap {
-			allKeys[key] = true
+		for key, val := range changeMap {
+			if _, ok := prices[key]; !ok {
+				prices[key] = val
+			} else {
+				prices[key] += val
+			}
 		}
 	}
 	bestPrice := 0
-	for key := range allKeys {
-		price := 0
-		for _, changeMap := range changeMaps {
-			if val, ok := changeMap[key]; ok {
-				price += val
-			}
-		}
-		if price > bestPrice {
-			bestPrice = price
+	for _, val := range prices {
+		if val > bestPrice {
+			bestPrice = val
 		}
 	}
 	return bestPrice
